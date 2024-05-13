@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<!-- HTML boilerplate -->
+		<meta charset="utf8"/>
+		<title>Scotland Yard</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+		<link rel="stylesheet" href="./style.css"/>
+	</head>
+	<script type="module">
+		map.addEventListener("click", function(e) {
+			let hue = Math.floor(Math.random() * 360)
+			e.target.style.setProperty("background-color", `hsl(${hue} 100 40)`)
+		})
+
+		function toggleMenu(e) {
+			e.target.parentElement.classList.toggle("collapsed")
+		}
+
+		document.querySelectorAll(".menuitem:first-child").forEach(el => {
+			el.addEventListener("click", toggleMenu)
+		})
+	</script>
+	<body>
+		<div id="map"></div>
+		<div id="menu">
+			<div class="submenu collapsed">
+				<div class="menuitem">Use Ticket</div>
+				<div class="menuitem">Double</div>
+				<div class="menuitem">Black</div>
+				<div class="menuitem">Subway</div>
+				<div class="menuitem">Bus</div>
+				<div class="menuitem">Cab</div>
+			</div>
+			<div class="submenu collapsed">
+				<div class="menuitem">Set Marker</div>
+				<div class="menuitem">Clear All</div>
+				<div class="menuitem">Erase</div>
+				<div class="menuitem">Dashed</div>
+				<div class="menuitem">Circle</div>
+			</div>
+			<div class="submenu collapsed">
+				<div class="menuitem">Settings</div>
+				<div class="menuitem">Fullscreen</div>
+				<div class="menuitem">Export state</div>
+			</div>
+			<div class="submenu collapsed">
+				<div class="menuitem">Turn</div>
+				<div class="menuitem">End turn</div>
+				<div class="menuitem">Hide screen</div>
+			</div>
+		</div>
+	</body>
+</html>

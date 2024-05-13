@@ -1,0 +1,46 @@
+body {
+	height: 100vh;
+	margin: 0;
+}
+
+#map {
+	width: 100%;
+	height: 100%;
+}
+
+#menu {
+	/* Space submenus equally */
+	display: flex;
+	flex-direction: column;
+	justify-content: space-around;
+	/* On right side */
+	position: absolute;
+	height: 100%;
+	top: 0;
+	right: 2rem;
+	/* Don't block events in gaps! */
+	pointer-events: none;
+}
+
+.submenu {
+	display: flex;
+	gap: 1rem;
+	/* Right to left */
+	flex-direction: row-reverse;
+}
+
+.menuitem {
+	width: 5rem;
+	height: 5rem;
+	background-color: blue;
+	/* Undo event prevention in gaps */
+	pointer-events: auto;
+}
+
+.menuitem:first-child {
+	margin-inline-start: 2rem;
+}
+
+.collapsed .menuitem:not(:first-child) {
+	display: none;
+}
