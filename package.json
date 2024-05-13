@@ -1,0 +1,22 @@
+{
+	"name": "scotland-yard",
+	"version": "0.0.0",
+	"description": "Recreation of the boardgame for local play",
+	"license": "MIT",
+	"author": "Pascal Lamprecht",
+	"repository": "github:Qivex/scotland-yard",
+	"scripts": {
+		"dev": "vite",
+		"build": "vite build",
+		"prev": "vite preview --host"
+	},
+	"dependencies": {
+		"leaflet": "1.9.4",
+		"webrtc-via-qr": "0.0.2",
+		"qrcode": "1.5.3",
+		"jsqr": "1.4.0"
+	},
+	"devDependencies": {
+		"vite": "5.2.11"
+	}
+}
