@@ -11,12 +11,14 @@
 		"prev": "vite preview --host"
 	},
 	"dependencies": {
+		"vue": "3.4.27",
 		"leaflet": "1.9.4",
 		"webrtc-via-qr": "0.0.2",
 		"qrcode": "1.5.3",
 		"jsqr": "1.4.0"
 	},
 	"devDependencies": {
-		"vite": "5.2.11"
+		"vite": "5.2.11",
+		"@vitejs/plugin-vue": "5.0.4"
 	}
 }
