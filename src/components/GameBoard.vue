@@ -17,27 +17,26 @@ const TICKET_TYPES = {
 	DOUBLE: 5 
 }
 
-function convert(point) {
-	return [-point[1],point[0]]
-}
-
 export default {
 	name: "GameBoard",
 	data() {
 		return {
 			map: undefined,
 			board,
-			players: {},
-			selectedTicket: TICKET_TYPES.TAXI
+			selectedTicket: TICKET_TYPES.TAXI,
+			// SoA instead of "players"-AoS because of (potential) deep watch and simpler updates
+			playerNames: [],
+			playerPlaces: [],
+			playerMarkers: []
 		}
 	},
 	methods: {
-		coordsFromPlaceID(placeID) {
-			return convert(this.board.stations[placeID][0])
+		getCoordsOfPlace(place) {
+			return this.board.stations[place][0]
 		},
 		createCircle(place, color) {
 			return Leaflet.circle(
-				this.coordsFromPlaceID(place),
+				this.getCoordsOfPlace(place),
 				{
 					color: color,
 					radius: 20
@@ -45,41 +44,42 @@ export default {
 			)
 		},
 		addPlayer(name, place, color) {
-			// Leaflet marker
+			// Get id
+			let playerID = this.playerNames.length
+			// Add name
+			this.playerNames.push(name)
+			// Add place
+			this.playerPlaces.push(place)
+			// Add marker
 			let marker = this.createCircle(place, color).addTo(this.map)
-			// Highlight targets on click
+			this.playerMarkers.push(marker)
+			// Temporary behaviour: Every player moved by a single user
 			marker.on("click", () => {
-				let targetMarkers = []
-				this.getMoveOptions(name, this.selectedTicket).forEach(targetPlace => {
-					let targetMarker = this.createCircle(targetPlace, "#000").addTo(this.map)
-					// Move player + remove targets
+				// Highlight possible targets
+				let availableTargets = []
+				this.getMoveOptions(playerID, this.selectedTicket).forEach(target => {
+					let targetMarker = this.createCircle(target, "#000").addTo(this.map)
+					availableTargets.push(targetMarker)
 					targetMarker.on("click", () => {
-						this.movePlayer(name, targetPlace)
-						targetMarkers.forEach(m => m.remove())
+						// Remove available target markers, then move player
+						availableTargets.forEach(m => m.remove())
+						this.movePlayer(playerID, target)
 					})
-					targetMarkers.push(targetMarker)
 				})
 			})
-			// Add to players
-			this.players[name] = {
-				place,
-				marker
-			}
 		},
-		movePlayer(name, target) {
-			let player = this.players[name]
-			// Update data
-			player.place = target
-			// Update marker
-			player.marker.setLatLng(this.coordsFromPlaceID(target))
+		movePlayer(playerID, target) {
+			// Update place
+			this.playerPlaces[playerID] = target
+			// Update marker (Todo: Deep watcher on playerPlaces?)
+			this.playerMarkers[playerID].setLatLng(this.getCoordsOfPlace(target))
 		},
-		getMoveOptions(playerName, ticketType) {
-			let currentPlace = this.players[playerName].place
+		getMoveOptions(playerID, ticketType) {
+			let currentPlace = this.playerPlaces[playerID]
 			// Get connections
 			let connectedPlaces = this.board.stations[currentPlace][ticketType] || []
 			// Filter occupied places
-			let playerInfo = Object.values(this.players)
-			return connectedPlaces.filter(placeID => !playerInfo.some(player => player.place === placeID))
+			return connectedPlaces.filter(place => !this.playerPlaces.includes(place))
 		}
 	},
 	mounted() {
