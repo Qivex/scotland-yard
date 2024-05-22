@@ -1,6 +1,6 @@
 <template>
 	<dialog>
-		<a v-if="inviteCode" :href="inviteURL" target="_blank">QR</a>
+		<a v-if="inviteCode" :href="src" target="_blank">QR</a>
 	</dialog>
 </template>
 
@@ -11,45 +11,46 @@ export default {
 	name: "InviteDialog",
 	data() {
 		return {
-			connection: new HostConnection({iceServers:[{urls:"stun:stun.cloudflare.com:3478"}]}),
-			sendChannel: undefined,
-			receiveChannel: undefined,
-			inviteCode: undefined
+			inviteCode: undefined,
+			src: "/"
 		}
 	},
-	computed: {
-		inviteURL() {
-			return "http://localhost:5173/index.html?invite=" + this.inviteCode
+	watch: {
+		inviteCode(code) {
+			// this.src = QRCode.toDataURL("http://192.168.0.154:5173/?invite=" + code)
+			this.src = "http://localhost:5173/index.html?invite=" + this.inviteCode
 		}
 	},
+	emits: ["connect"],
 	mounted() {
-		// Failure
-		this.connection.addEventListener("connectionstatechange", e => {
-			switch (this.connection.connectionState) {
+		this.$el.show()
+		// Create connection
+		let connection = new HostConnection({iceServers:[{urls:"stun:stun.cloudflare.com:3478"}]})
+		let sendChannel = connection.createDataChannel("fromhost")
+		// Failure handler
+		connection.addEventListener("connectionstatechange", e => {
+			switch (connection.connectionState) {
 				case "disconnected":
 				case "failed":
 					console.log("Connection failed")
 					break
 			}
 		})
-		// Success
-		this.connection.addEventListener("datachannel", e => {
-			this.sendChannel.send("msg from host")
-			this.receiveChannel = e.channel
+		// Success handler
+		connection.addEventListener("datachannel", e => {
+			sendChannel.send("msg from host")
 			e.channel.addEventListener("message", m => console.log(m.data))
+			this.$emit("connect", connection, sendChannel, e.channel)
 		})
 		// Attempt connection
-		this.sendChannel = this.connection.createDataChannel("fromhost")
-		this.connection.createInvite()
-			.then(inviteCode => {
-				this.inviteCode = inviteCode
-			})
-		
+		connection.createInvite()
+			.then(inviteCode => this.inviteCode = inviteCode)
 		// Mock scanning of QR code for now
-		let bc = new BroadcastChannel("accept-bypass")
-		bc.addEventListener("message", msg => {
-			this.connection.confirmAccept(msg.data)
-		})
+		let bc = new BroadcastChannel("qr-bypass")
+		bc.addEventListener("message", msg => connection.confirmAccept(msg.data))
+	},
+	unmounted() {
+		this.$el.close()
 	}
 }
 </script>

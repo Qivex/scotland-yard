@@ -13,36 +13,30 @@ function wrapAsComputed(component, propName) {
 
 export default {
 	name: "UserApp",
-	data() {
-		return {
-			connection: new UserConnection({iceServers:[{urls:"stun:stun.cloudflare.com:3478"}]}),
-			sendChannel: undefined,
-			receiveChannel: undefined
-		}
-	},
 	inject: ["inviteCode"],
 	mounted() {
-		// Failure
-		this.connection.addEventListener("connectionstatechange", e => {
-			switch (this.connection.connectionState) {
+		// Create connection
+		let connection = new UserConnection({iceServers:[{urls:"stun:stun.cloudflare.com:3478"}]})
+		let sendChannel = connection.createDataChannel("fromuser")
+		// Failure handler
+		connection.addEventListener("connectionstatechange", e => {
+			switch (connection.connectionState) {
 				case "disconnected":
 				case "failed":
 					console.log("Connection failed")
 					break
 			}
 		})
-		// Success
-		this.connection.addEventListener("datachannel", e => {
-			this.sendChannel.send("msg from user")
-			this.receiveChannel = e.channel
+		// Success handler
+		connection.addEventListener("datachannel", e => {
+			sendChannel.send("msg from user")
 			e.channel.addEventListener("message", m => console.log(m.data))
 		})
 		// Attempt connection
-		this.sendChannel = this.connection.createDataChannel("fromuser")
-		this.connection.acceptInvite(this.inviteCode)
+		connection.acceptInvite(this.inviteCode)
 			// Mock scanning of QR code for now
 			.then(accept => {
-				let bc = new BroadcastChannel("accept-bypass")
+				let bc = new BroadcastChannel("qr-bypass")
 				bc.postMessage(accept)
 			})
 	}
