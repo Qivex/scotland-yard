@@ -38,8 +38,6 @@ export default {
 		})
 		// Success handler
 		connection.addEventListener("datachannel", e => {
-			sendChannel.send("msg from host")
-			e.channel.addEventListener("message", m => console.log(m.data))
 			this.$emit("connect", connection, sendChannel, e.channel)
 		})
 		// Attempt connection
@@ -47,7 +45,10 @@ export default {
 			.then(inviteCode => this.inviteCode = inviteCode)
 		// Mock scanning of QR code for now
 		let bc = new BroadcastChannel("qr-bypass")
-		bc.addEventListener("message", msg => connection.confirmAccept(msg.data))
+		bc.addEventListener("message", msg => {
+			connection.confirmAccept(msg.data)
+			bc.close()
+		})
 	},
 	unmounted() {
 		this.$el.close()
