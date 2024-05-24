@@ -1,22 +1,34 @@
 <template>
-	<button @click="isInviteDialogOpen = true">Invite</button>
-	<InviteDialog v-if="isInviteDialogOpen" @connect="onConnect"/>
-	<Lobby ref="lobby"/>
+	<template v-if="isIngame">
+		<GameBoard ref="game"/>
+		<GameMenu/>
+	</template>
+	<Lobby v-else ref="lobby" ownID="host" @ready="startGame">
+		<button @click="isInviting = true">Invite</button>
+		<button @click="hostReady">Host ready</button>
+		<button :disabled="!$refs?.lobby?.isEveryoneReady">Start game</button>
+		<InviteDialog v-if="isInviting" @connect="onConnect"/>
+	</Lobby>
 </template>
 
 <script>
-import InviteDialog from "../components/InviteDialog.vue"
+import GameBoard from "../components/GameBoard.vue"
+import GameMenu from "../components/GameMenu.vue"
 import Lobby from "../components/Lobby.vue"
+import InviteDialog from "../components/InviteDialog.vue"
 
 export default {
 	name: "HostApp",
 	components: {
-		InviteDialog,
-		Lobby
+		GameBoard,
+		GameMenu,
+		Lobby,
+		InviteDialog
 	},
 	data() {
 		return {
-			isInviteDialogOpen: false,
+			isInviting: false,
+			isIngame: false,
 			connections: []
 			// history: []
 		}
@@ -33,7 +45,7 @@ export default {
 				case "first_contact":
 					respond("id_assign", {id: window.crypto.randomUUID()})
 					break
-				case "join_lobby":
+				case "player_join":
 					// Add player to lobby
 					this.$refs.lobby.addPlayer(content)
 					// Respond with current lobby state
@@ -43,7 +55,11 @@ export default {
 					break
 				case "player_appearance_change":
 					this.$refs.lobby.updatePlayerAppearance(content)
-					// Todo: relay to others
+					relay("player_appearance_change", content)
+					break
+				case "player_ready":
+					this.$refs.lobby.updatePlayerReady(content)
+					relay("player_ready", content)
 					break
 				default:
 					console.log(`Unknown message: ${type}`)
@@ -68,7 +84,15 @@ export default {
 			})
 			// Todo: Handle disconnects
 			this.connections.push([connection, sendChannel, receiveChannel])
-			this.isInviteDialogOpen = false
+			this.isInviting = false
+		},
+		hostReady() {
+			this.$refs.lobby.updatePlayerReady({id: "host"})
+			this.broadcast("player_ready", {id: "host"})
+		},
+		startGame() {
+			this.isIngame = true
+			this.broadcast("game_start", {})
 		}
 	},
 	mounted() {
@@ -76,3 +100,7 @@ export default {
 	}
 }
 </script>
+
+<style>
+@import url(../style/common.css);
+</style>
