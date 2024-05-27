@@ -14,17 +14,26 @@ const TICKET_TYPES = {
 	BUS: 2,
 	SUBWAY: 3,
 	BLACK: 4,
-	DOUBLE: 5 
+	DOUBLE: 5
 }
 
 export default {
 	name: "GameBoard",
+	emits: [
+		"loaded",
+		"move"
+	],
+	props: {
+		boardName: String,
+		players: Array
+	},
 	data() {
 		return {
 			map: undefined,
-			board,
+			board,	// Todo: Fetch
 			selectedTicket: TICKET_TYPES.TAXI,
 			// SoA instead of "players"-AoS because of (potential) deep watch and simpler updates
+			playerUUIDs: [],
 			playerNames: [],
 			playerPlaces: [],
 			playerMarkers: []
@@ -43,9 +52,11 @@ export default {
 				}
 			)
 		},
-		addPlayer(name, place, color) {
-			// Get id
+		addPlayer(id, name, place, color) {
+			// Get index
 			let playerID = this.playerNames.length
+			// Add id
+			this.playerUUIDs.push(id)
 			// Add name
 			this.playerNames.push(name)
 			// Add place
@@ -57,6 +68,7 @@ export default {
 			marker.on("click", () => {
 				// Highlight possible targets
 				let availableTargets = []
+				console.log(this.selectedTicket)
 				this.getMoveOptions(playerID, this.selectedTicket).forEach(target => {
 					let targetMarker = this.createCircle(target, "#000").addTo(this.map)
 					availableTargets.push(targetMarker)
@@ -80,6 +92,9 @@ export default {
 			let connectedPlaces = this.board.stations[currentPlace][ticketType] || []
 			// Filter occupied places
 			return connectedPlaces.filter(place => !this.playerPlaces.includes(place))
+		},
+		selectTicket(ticketType) {
+			this.selectedTicket = ticketType
 		}
 	},
 	mounted() {
@@ -106,10 +121,12 @@ export default {
 			minNativeZoom: 0,
 			maxNativeZoom: 0
 		}).addTo(this.map)
-		// Test
-		this.addPlayer("a", 0, "#f00")
-		this.addPlayer("b", 2, "#0f0")
-		this.addPlayer("c", 3, "#00f")
+		// Player init
+		this.players.forEach(p => {
+			this.addPlayer(p.id, p.name, p.place, p.color)
+		})
+		// Let others know this board is ready
+		this.$emit("loaded")
 	}
 }
 </script>

@@ -1,7 +1,14 @@
 <template>
 	<template v-if="isIngame">
-		<GameBoard ref="game"/>
-		<GameMenu/>
+		<GameBoard ref="game" :board="boardName" :players="playerCache"
+			@loaded="onBoardLoaded"
+			@move="selectMove"
+		/>
+		<GameMenu
+			@ticket="selectTicket"
+			@fullscreen="toggleFullscreen"
+			@lock="endTurn"
+		/>
 	</template>
 	<Lobby v-else ref="lobby" ownID="host" @ready="startGame">
 		<button @click="isInviting = true">Invite</button>
@@ -29,8 +36,9 @@ export default {
 		return {
 			isInviting: false,
 			isIngame: false,
-			connections: []
-			// history: []
+			connections: [],
+			// history: [],
+			playerCache: undefined
 		}
 	},
 	methods: {
@@ -60,6 +68,9 @@ export default {
 				case "player_ready":
 					this.$refs.lobby.updatePlayerReady(content)
 					relay("player_ready", content)
+					break
+				case "board_loaded":
+					// TODO
 					break
 				default:
 					console.log(`Unknown message: ${type}`)
@@ -91,8 +102,15 @@ export default {
 			this.broadcast("player_ready", {id: "host"})
 		},
 		startGame() {
+			const playerCache = this.$refs.lobby.players.map((p, index) => {
+				p.place = index // Very temporary!!
+				return p
+			})
+			this.playerCache = playerCache
+			this.broadcast("game_start", {
+				players: playerCache
+			})
 			this.isIngame = true
-			this.broadcast("game_start", {})
 		}
 	},
 	mounted() {

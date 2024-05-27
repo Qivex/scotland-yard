@@ -1,7 +1,14 @@
 <template>
 	<template v-if="isIngame">
-		<GameBoard ref="game"/>
-		<GameMenu/>
+		<GameBoard ref="game" :board="boardName" :players="playerCache"
+			@loaded="onBoardLoaded"
+			@move="selectMove"
+		/>
+		<GameMenu
+			@ticket="selectTicket"
+			@fullscreen="toggleFullscreen"
+			@lock="endTurn"
+		/>
 	</template>
 	<Lobby v-else ref="lobby" :ownID="uuid">
 		<AppearanceSelect @confirm="updateOwnAppearance"/>
@@ -36,6 +43,8 @@ export default {
 	data() {
 		return {
 			isIngame: false,
+			boardName: "board",
+			playerCache: undefined,
 			uuid: undefined,
 			sendChannel: undefined
 		}
@@ -60,7 +69,10 @@ export default {
 					this.$refs.lobby.updatePlayerReady(content)
 					break
 				case "game_start":
+					this.boardName = content.board
 					this.isIngame = true
+					// Cache player data from lobby, because its unmounted before GameBoard can mount
+					this.playerCache = content.players
 					break
 				default:
 					console.log(`Unknown message: ${type}`)
@@ -90,6 +102,19 @@ export default {
 			this.sendChannel.send(JSON.stringify({
 				type: "player_ready",
 				content: content
+			}))
+		},
+		selectTicket(ticketType) {
+			this.$refs.game.selectTicket(ticketType)
+		},
+		toggleFullscreen(){
+			console.log("Fullscreen requested")
+		},
+		onBoardLoaded() {
+			// Let others know that this user is ready
+			this.sendChannel.send(JSON.stringify({
+				type: "board_loaded",
+				content: {id: this.uuid}
 			}))
 		}
 	},
