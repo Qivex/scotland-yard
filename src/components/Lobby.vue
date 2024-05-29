@@ -2,7 +2,7 @@
 	<div class="lobby">
 		<slot/>
 		<ul>
-			<li v-for="player in players" :class="{me: ownID === player.id}">
+			<li v-for="player in players" :class="{me: ownUUID === player.uuid}">
 				<p v-text="player.name"></p>
 				<div class="player-color-indicator" :style="{backgroundColor: player.color}" :class="{ready: player.ready}"></div>
 			</li>
@@ -11,46 +11,32 @@
 </template>
 
 <script>
-function getRandomColor() {
-	return `hsl(${Math.floor(Math.random() * 360)} 100 50)`
-}
-
 export default {
 	name: "Lobby",
 	props: {
-		ownID: String
+		ownUUID: String
 	},
-	emits: ["ready"],
 	data() {
 		return {
-			players: [],
-			unknownCounter: 0
+			players: []
 		}
 	},
 	methods: {
 		addPlayer(player) {
-			console.assert(player.id, "Player has no id!")
-			if (!player.name) {
-				player.name = `Unknown (${++this.unknownCounter})`
-			}
-			if (!player.color) {
-				player.color = getRandomColor()
-			}
+			console.assert(player.uuid && player.name && player.color, "Incomplete player data!")
 			this.players.push(player)
 		},
-		updatePlayerAppearance(updatedPlayer) {
-			let player = this.players.find(p => p.id === updatedPlayer.id)
-			player.name = updatedPlayer.name
-			player.color = updatedPlayer.color
+		getPlayerByUUID(uuid) {
+			return this.players.find(p => p.uuid === uuid)
 		},
-		updatePlayerReady(updatedPlayer) {
-			let player = this.players.find(p => p.id === updatedPlayer.id)
+		setPlayerAppearance(uuid, name, color) {
+			let player = this.getPlayerByUUID(uuid)
+			player.name = name
+			player.color = color
+		},
+		setPlayerReady(uuid) {
+			let player = this.getPlayerByUUID(uuid)
 			player.ready = true
-			// Emit if everyone is ready
-			let readyCount = this.players.filter(p => p.ready).length
-			if (readyCount >= this.players.length) {
-				this.$emit("ready")
-			}
 		}
 	}
 }

@@ -1,13 +1,13 @@
 import { createApp } from "vue"
 import MainApp from "./apps/MainApp.vue"
-import HostApp from "./apps/HostApp.vue"
-import UserApp from "./apps/UserApp.vue"
+
+const app = createApp(MainApp)
 
 let params = new URLSearchParams(window.location.search)
 if (params.has("invite")) {
-	createApp(UserApp).provide("inviteCode", params.get("invite")).mount("#vue-app")
-} else if (params.has("host")) {
-	createApp(HostApp).mount("#vue-app")
+	app.provide("inviteCode", params.get("invite"))
 } else {
-	createApp(MainApp).mount("#vue-app")
+	app.provide("isInitialHost", true)
 }
+
+app.mount("#vue-app")

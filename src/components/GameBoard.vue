@@ -24,8 +24,7 @@ export default {
 		"move"
 	],
 	props: {
-		boardName: String,
-		players: Array
+		boardName: String
 	},
 	data() {
 		return {
@@ -68,7 +67,6 @@ export default {
 			marker.on("click", () => {
 				// Highlight possible targets
 				let availableTargets = []
-				console.log(this.selectedTicket)
 				this.getMoveOptions(playerID, this.selectedTicket).forEach(target => {
 					let targetMarker = this.createCircle(target, "#000").addTo(this.map)
 					availableTargets.push(targetMarker)
@@ -121,11 +119,7 @@ export default {
 			minNativeZoom: 0,
 			maxNativeZoom: 0
 		}).addTo(this.map)
-		// Player init
-		this.players.forEach(p => {
-			this.addPlayer(p.id, p.name, p.place, p.color)
-		})
-		// Let others know this board is ready
+		// Emit when board is ready to add players
 		this.$emit("loaded")
 	}
 }
