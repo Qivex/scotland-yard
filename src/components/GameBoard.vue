@@ -6,9 +6,6 @@
 import "leaflet/dist/leaflet.css"
 import Leaflet from "leaflet"
 
-import board from "../data/board.json"
-const [width, height] = board.size
-
 const TICKET_TYPES = {
 	TAXI: 1,
 	BUS: 2,
@@ -24,12 +21,12 @@ export default {
 		"move"
 	],
 	props: {
-		boardName: String
+		boardSrc: String
 	},
 	data() {
 		return {
 			map: undefined,
-			board,	// Todo: Fetch
+			board: undefined,
 			selectedTicket: TICKET_TYPES.TAXI,
 			// SoA instead of "players"-AoS because of (potential) deep watch and simpler updates
 			playerUUIDs: [],
@@ -96,31 +93,38 @@ export default {
 		}
 	},
 	mounted() {
-		// Map init
-		this.map = Leaflet.map("gameboard", {
-			crs: Leaflet.CRS.Simple,
-			attributionControl: false,
-			zoomControl: false,
-			maxZoom: 2,
-			minZoom: 0,
-			zoomSnap: 0.5,
-			center: [
-				height/-2,
-				width/2
-			],
-			zoom: 1
-		})
-		Leaflet.tileLayer("board.png", {
-			tileSize: Leaflet.point(width, height),
-			bounds: [
-				[0, 0],
-				[-height, width]
-			],
-			minNativeZoom: 0,
-			maxNativeZoom: 0
-		}).addTo(this.map)
-		// Emit when board is ready to add players
-		this.$emit("loaded")
+		// Fetch board data
+		fetch(import.meta.env.BASE_URL + this.boardSrc)
+			.then(res => res.json())
+			.then(boardData => {
+				this.board = boardData
+				const [width, height] = this.board.image.size
+				// Map init
+				this.map = Leaflet.map("gameboard", {
+					crs: Leaflet.CRS.Simple,
+					attributionControl: false,
+					zoomControl: false,
+					maxZoom: 2,
+					minZoom: 0,
+					zoomSnap: 0.5,
+					center: [
+						height/-2,
+						width/2
+					],
+					zoom: 1
+				})
+				Leaflet.tileLayer(this.board.image.src, {
+					tileSize: Leaflet.point(width, height),
+					bounds: [
+						[0, 0],
+						[-height, width]
+					],
+					minNativeZoom: 0,
+					maxNativeZoom: 0
+				}).addTo(this.map)
+				// Emit when board is ready to add players
+				this.$emit("loaded")
+			})
 	}
 }
 </script>

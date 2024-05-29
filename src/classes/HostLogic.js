@@ -26,7 +26,7 @@ export default class HostLogic {
 		this.players = []
 		this.unknownCounter = 0
 		// Game
-		this.boardName = "board"
+		this.boardSrc = "boards/board1.json"	// Todo: From "host_select_board" instead of default
 	}
 
 	getConnectionByUUID(uuid) {
@@ -91,7 +91,7 @@ export default class HostLogic {
 		switch (command) {
 			case "host_start_game":
 				broadcast("game_start", {
-					board: this.boardName,
+					boardSrc: this.boardSrc,
 					players: this.players.map((p, index) => {
 						p.place = index // Very temporary!!
 						return p
@@ -99,7 +99,7 @@ export default class HostLogic {
 				})
 				break
 			case "host_select_board":
-				this.boardName = content.board
+				this.boardSrc = content.boardSrc
 				break
 			case "host_kick_player":
 				answer("not_yet_implemented")

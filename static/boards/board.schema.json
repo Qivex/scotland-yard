@@ -1,0 +1,165 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "Scotland Yard Board",
+	"type": "object",
+	"required": ["image", "stations", "tickets", "turnCount", "visibleTurns"],
+	"additionalProperties": false,
+	"properties": {
+		"$schema": {
+			"type": "string",
+			"format": "uri-reference"
+		},
+		"image": {
+			"description": "Background image of the board",
+			"type": "object",
+			"required": ["src", "size"],
+			"properties": {
+				"src": {
+					"description": "URI of the image",
+					"type": "string",
+					"format": "uri-reference"
+				},
+				"size": {
+					"description": "Dimensions of the image",
+					"type": "array",
+					"additionalItems": false,
+					"items":[
+						{
+							"description": "Width",
+							"type": "integer"
+						},
+						{
+							"description": "Height",
+							"type": "integer"
+						}
+					]
+				}
+			}
+		},
+		"stations": {
+			"description": "All stations on the board that can be visited",
+			"type": "array",
+			"items": {
+				"description": "A single station (includes coordinates on the board, followed by the connections available when using each ticket type)",
+				"type": "array",
+				"minItems": 2,
+				"maxItems": 5,
+				"items": [
+					{
+						"description": "Coordinates of this station on the map (includes latitude & longitude)",
+						"type": "array",
+						"additionalItems": false,
+						"items": [
+							{
+								"description": "Latitude",
+								"type": "number"
+							},
+							{
+								"description": "Longitude",
+								"type": "number"
+							}
+						]
+					},
+					{
+						"description": "Connections available when using a taxi",
+						"type": "array",
+						"items": {
+							"description": "Taxi connection",
+							"type": "integer"
+						}
+					},
+					{
+						"description": "Connections available when using a bus",
+						"type": "array",
+						"items": {
+							"description": "Bus connection",
+							"type": "integer"
+						}
+					},
+					{
+						"description": "Connections available when using a subway",
+						"type": "array",
+						"items": {
+							"description": "Subway connection",
+							"type": "integer"
+						}
+					},
+					{
+						"description": "Connections available when using a black ticket",
+						"type": "array",
+						"items": {
+							"description": "Black ticket connection",
+							"type": "integer"
+						}
+					}
+				]
+			}
+		},
+		"tickets": {
+			"description": "Number of tickets the players start with",
+			"type": "array",
+			"minItems": 2,
+			"maxItems": 2,
+			"items": [
+				{
+					"description": "Number of tickets Mr.X starts with",
+					"type": "array",
+					"additionalItems": false,
+					"items": [
+						{
+							"description": "Taxi tickets",
+							"type": "integer"
+						},
+						{
+							"description": "Bus tickets",
+							"type": "integer"
+						},
+						{
+							"description": "Subway tickets",
+							"type": "integer"
+						},
+						{
+							"description": "Black tickets",
+							"type": "integer"
+						}
+					]
+				},
+				{
+					"description": "Number of tickets the detectives start with",
+					"type": "array",
+					"additionalItems": false,
+					"items": [
+						{
+							"description": "Taxi tickets",
+							"type": "integer"
+						},
+						{
+							"description": "Bus tickets",
+							"type": "integer"
+						},
+						{
+							"description": "Subway tickets",
+							"type": "integer"
+						},
+						{
+							"description": "Black tickets",
+							"type": "integer"
+						}
+					]
+				}
+			]
+		},
+		"turnCount": {
+			"description": "Amount of turns for Mr.X to win",
+			"type": "integer"
+		},
+		"visibleTurns": {
+			"description": "All turns by Mr.X which are visible for everyone",
+			"type": "array",
+			"items": {
+				"description": "Visible turn",
+				"type": "integer"
+			}
+		}
+	}
+}

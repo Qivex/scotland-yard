@@ -1,6 +1,6 @@
 <template>
 	<template v-if="isIngame">
-		<GameBoard ref="game" :boardName="boardName"
+		<GameBoard ref="game" :boardSrc="boardSrc"
 			@loaded="onBoardLoaded"
 		/>
 		<GameMenu
@@ -54,7 +54,7 @@ export default {
 			hostlogic: undefined,
 			uuid: undefined,
 			// Board setup
-			boardName: "board",
+			boardSrc: undefined,
 			playerStartingPlaces: undefined
 		}
 	},
@@ -82,6 +82,7 @@ export default {
 					break
 				case "game_start":
 					this.isIngame = true
+					this.boardSrc = content.boardSrc
 					this.playerStartingPlaces = content.players
 					break
 				default:
