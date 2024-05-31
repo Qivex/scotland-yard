@@ -103,49 +103,11 @@
 			"items": [
 				{
 					"description": "Number of tickets Mr.X starts with",
-					"type": "array",
-					"additionalItems": false,
-					"items": [
-						{
-							"description": "Taxi tickets",
-							"type": "integer"
-						},
-						{
-							"description": "Bus tickets",
-							"type": "integer"
-						},
-						{
-							"description": "Subway tickets",
-							"type": "integer"
-						},
-						{
-							"description": "Black tickets",
-							"type": "integer"
-						}
-					]
+					"$ref": "#/$defs/tickets"
 				},
 				{
 					"description": "Number of tickets the detectives start with",
-					"type": "array",
-					"additionalItems": false,
-					"items": [
-						{
-							"description": "Taxi tickets",
-							"type": "integer"
-						},
-						{
-							"description": "Bus tickets",
-							"type": "integer"
-						},
-						{
-							"description": "Subway tickets",
-							"type": "integer"
-						},
-						{
-							"description": "Black tickets",
-							"type": "integer"
-						}
-					]
+					"$ref": "#/$defs/tickets"
 				}
 			]
 		},
@@ -161,5 +123,32 @@
 				"type": "integer"
 			}
 		}
-	}
-}
+	},
+	"$defs": {
+		"tickets": {
+			"type": "array",
+			"additionalItems": false,
+			"items": [
+				{
+					"description": "Taxi tickets",
+					"type": "integer"
+				},
+				{
+					"description": "Bus tickets",
+					"type": "integer"
+				},
+				{
+					"description": "Subway tickets",
+					"type": "integer"
+				},
+				{
+					"description": "Black tickets",
+					"type": "integer"
+				},
+				{
+					"description": "Double tickets",
+					"type": "integer"
+				}
+			]
+		}
+	}}
