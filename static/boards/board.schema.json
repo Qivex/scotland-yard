@@ -122,6 +122,14 @@
 				"description": "Visible turn",
 				"type": "integer"
 			}
+		},
+		"startLocations": {
+			"description": "All locations where players could start from",
+			"type": "array",
+			"items": {
+				"description": "Possible start",
+				"type": "integer"
+			}
 		}
 	},
 	"$defs": {

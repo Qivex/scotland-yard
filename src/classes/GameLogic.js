@@ -2,11 +2,20 @@ function randomInt(limit) {
 	return Math.floor(Math.random() * limit)
 }
 
+const TICKET_TYPES = {
+	TAXI: 1,
+	BUS: 2,
+	SUBWAY: 3,
+	BLACK: 4,
+	DOUBLE: 5
+}
+
 export default class GameLogic {
 	constructor() {
 		this.currentTurn = 0	// 0 <= currentTurn < boardData.turnCount
 		this.currentMove = 0	// 0 <= currentMove < players.length
 		this.board = undefined
+		this.boardID = undefined
 		this.players = []
 		this.turns = []
 		// Calculated:
@@ -26,6 +35,7 @@ export default class GameLogic {
 	loadState(state) {
 		return this.loadBoard(state.boardID)
 			.then(() => {
+				this.boardID = state.boardID
 				this.players = state.players
 				this.starts = state.starts || []
 				this.turns = state.turns || []

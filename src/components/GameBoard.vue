@@ -6,12 +6,8 @@
 import "leaflet/dist/leaflet.css"
 import Leaflet from "leaflet"
 
-const TICKET_TYPES = {
-	TAXI: 1,
-	BUS: 2,
-	SUBWAY: 3,
-	BLACK: 4,
-	DOUBLE: 5
+function circle(latlng, color) {
+	return Leaflet.circle(latlng, {color: color, radius: 20})
 }
 
 export default {
@@ -21,81 +17,58 @@ export default {
 		"move"
 	],
 	props: {
-		boardSrc: String
+		boardID: String
 	},
 	data() {
 		return {
 			map: undefined,
 			board: undefined,
-			selectedTicket: TICKET_TYPES.TAXI,
-			// SoA instead of "players"-AoS because of (potential) deep watch and simpler updates
-			playerUUIDs: [],
-			playerNames: [],
-			playerPlaces: [],
-			playerMarkers: []
+			playerMarkers: {},
+			currentMoveOptions: []
 		}
 	},
 	methods: {
 		getCoordsOfPlace(place) {
-			return this.board.stations[place][0]
+			return this.board.stations[place]?.[0] || [0,0]
 		},
-		createCircle(place, color) {
-			return Leaflet.circle(
-				this.getCoordsOfPlace(place),
-				{
-					color: color,
-					radius: 20
-				}
-			)
+		addPlayerMarker(uuid, place, name, color, hidden) {
+			let marker = circle(this.getCoordsOfPlace(place), color)
+			marker.bindTooltip(name)
+			if (!hidden) {
+				marker.addTo(this.map)
+			}
+			this.playerMarkers[uuid] = marker
 		},
-		addPlayer(id, name, place, color) {
-			// Get index
-			let playerID = this.playerNames.length
-			// Add id
-			this.playerUUIDs.push(id)
-			// Add name
-			this.playerNames.push(name)
-			// Add place
-			this.playerPlaces.push(place)
-			// Add marker
-			let marker = this.createCircle(place, color).addTo(this.map)
-			this.playerMarkers.push(marker)
-			// Temporary behaviour: Every player moved by a single user
-			marker.on("click", () => {
-				// Highlight possible targets
-				let availableTargets = []
-				this.getMoveOptions(playerID, this.selectedTicket).forEach(target => {
-					let targetMarker = this.createCircle(target, "#000").addTo(this.map)
-					availableTargets.push(targetMarker)
-					targetMarker.on("click", () => {
-						// Remove available target markers, then move player
-						availableTargets.forEach(m => m.remove())
-						this.movePlayer(playerID, target)
-					})
+		movePlayerMarker(uuid, target) {
+			this.playerMarkers[uuid].setLatLng(this.getCoordsOfPlace(target))
+		},
+		hidePlayerMarker(uuid) {
+			this.playerMarkers[uuid].remove()
+		},
+		revealPlayerMarker(uuid) {
+			this.playerMarkers[uuid].addTo(this.map)
+		},
+		displayMoveOptions(targets, color) {
+			for (const place of targets) {
+				let marker = circle(this.getCoordsOfPlace(place), color)
+				marker.on("click", () => {
+					this.hideMoveOptions()
+					this.$emit("targetselect", place)
 				})
-			})
+				marker.addTo(this.map)
+				this.currentMoveOptions.push(marker)
+			}
 		},
-		movePlayer(playerID, target) {
-			// Update place
-			this.playerPlaces[playerID] = target
-			// Update marker (Todo: Deep watcher on playerPlaces?)
-			this.playerMarkers[playerID].setLatLng(this.getCoordsOfPlace(target))
-		},
-		getMoveOptions(playerID, ticketType) {
-			// Todo: Black ticket!
-			let currentPlace = this.playerPlaces[playerID]
-			// Get connections
-			let connectedPlaces = this.board.stations[currentPlace][ticketType] || []
-			// Filter occupied places (but not Mr.X!)
-			return connectedPlaces.filter(place => !this.playerPlaces.with(0, false).includes(place))
-		},
-		selectTicket(ticketType) {
-			this.selectedTicket = ticketType
+		hideMoveOptions() {
+			for (const marker of this.currentMoveOptions) {
+				marker.remove()
+			}
+			this.currentMoveOptions = []
 		}
 	},
 	mounted() {
 		// Fetch board data
-		fetch(import.meta.env.BASE_URL + this.boardSrc)
+		fetch(`${import.meta.env.BASE_URL}boards/${this.boardID}.json`)
 			.then(res => res.json())
 			.then(boardData => {
 				this.board = boardData

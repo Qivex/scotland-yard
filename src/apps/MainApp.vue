@@ -1,7 +1,7 @@
 <template>
 	<template v-if="isIngame">
-		<GameBoard ref="game" :boardSrc="boardSrc"
-			@loaded="onBoardLoaded"
+		<GameBoard ref="game" :boardID="boardID"
+			@loaded="sendLoaded"
 		/>
 		<GameMenu
 			@ticket="selectTicket"
@@ -9,7 +9,7 @@
 	</template>
 	<Lobby v-else ref="lobby" :ownUUID="uuid">
 		<AppearanceSelect @confirm="updateAppearance"/>
-		<button @click="setReady">Ready</button>
+		<button @click="sendReady">Ready</button>
 		<template v-if="isHosting">
 			<InviteDialog v-if="isInviting" @connect="addNewConnection"/>
 			<button @click="isInviting = true">Invite player</button>
@@ -54,8 +54,8 @@ export default {
 			hostlogic: undefined,
 			uuid: undefined,
 			// Board setup
-			boardSrc: undefined,
-			playerStartingPlaces: undefined
+			boardID: undefined,
+			appearances: undefined
 		}
 	},
 	methods: {
@@ -81,9 +81,12 @@ export default {
 					this.isEveryoneReady = true
 					break
 				case "game_start":
-					this.isIngame = true
-					this.boardSrc = content.boardSrc
-					this.playerStartingPlaces = content.players
+					this.appearances = this.$refs.lobby.players	// Store seperately because Lobby gets unmounted
+					this.boardID = content.boardID
+					this.isIngame = true	// Causes massive UI update
+					break
+				case "player_locations":
+					this.addPlayerMarkers(content.locations)
 					break
 				default:
 					console.log(command + " not handled")
@@ -104,9 +107,17 @@ export default {
 				}
 			}))
 		},
-		setReady() {
+		sendReady() {
 			this.channelToHost.send(JSON.stringify({
 				command: "player_ready",
+				content: {
+					uuid: this.uuid
+				}
+			}))
+		},
+		sendLoaded() {
+			this.channelToHost.send(JSON.stringify({
+				command: "player_loaded",
 				content: {
 					uuid: this.uuid
 				}
@@ -117,15 +128,17 @@ export default {
 				command: "host_start_game"
 			}))
 		},
-		// Board interactions
-		onBoardLoaded() {
-			this.playerStartingPlaces.forEach(p => {
-				this.$refs.game.addPlayer(p.id, p.name, p.place, p.color)
+		addPlayerMarkers(places) {
+			places.forEach((place, index) => {
+				let player = this.appearances[index]
+				this.$refs.game.addPlayerMarker(player.uuid, place, player.name, player.color, place === null)	// Hidden when no place
 			})
 		},
-		// Menu interactions
 		selectTicket(ticketType) {
-			this.$refs.game.selectTicket(ticketType)
+			/* Todo:
+			- send "get_move_options" to host
+			- draw response using this.$refs.game.displayMoveOptions()
+			*/
 		}
 	},
 	mounted() {

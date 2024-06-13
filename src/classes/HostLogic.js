@@ -1,4 +1,5 @@
 import { HostConnection, UserConnection } from "webrtc-via-qr"
+import GameLogic from "./GameLogic.js"
 
 // Connection config (Todo: single export)
 const config = {
@@ -26,7 +27,10 @@ export default class HostLogic {
 		this.players = []
 		this.unknownCounter = 0
 		// Game
-		this.boardSrc = "boards/board1.json"	// Todo: From "host_select_board" instead of default
+		this.boardID = "board1"	// Todo: From "host_select_board" instead of default
+		// State
+		this.loadedCount = 0
+		this.gameLogic = undefined
 	}
 
 	getConnectionByUUID(uuid) {
@@ -82,6 +86,21 @@ export default class HostLogic {
 					send(this.connections[0][1], "everyone_ready")
 				}
 				break
+			case "player_loaded":
+				if (++this.loadedCount >= this.players.length) {
+					// Send player locations
+					let mrxLocation = this.gameLogic.playerPlaces[0]
+					this.players.forEach((player, index) => {
+						let channel = this.getConnectionByUUID(player.uuid)[1]
+						channel.send(JSON.stringify({
+							command: "player_locations",
+							content: {
+								locations: this.gameLogic.playerPlaces.with(0, index === 0 ? mrxLocation : null)
+							}
+						}))
+					})
+				}
+				break
 			default:
 				answer("command_not_recognized", {command})
 				break
@@ -93,16 +112,16 @@ export default class HostLogic {
 		let {answer, relay, broadcast, channel} = respondOptions
 		switch (command) {
 			case "host_start_game":
-				broadcast("game_start", {
-					boardSrc: this.boardSrc,
-					players: this.players.map((p, index) => {
-						p.place = index // Very temporary!!
-						return p
-					})
+				this.gameLogic = new GameLogic()
+				this.gameLogic.loadState({
+					boardID: this.boardID,
+					players: this.players.map(p => p.uuid)	// This assumes lobby order = move order -> Todo: Extra mapping
+				}).then(() => {
+					broadcast("game_start", {boardID: this.boardID})
 				})
 				break
 			case "host_select_board":
-				this.boardSrc = content.boardSrc
+				this.boardID = content.boardID
 				break
 			case "host_kick_player":
 				answer("not_yet_implemented")
