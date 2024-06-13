@@ -1,0 +1,64 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "Scotland Yard Gamestate",
+	"type": "object",
+	"required": ["boardID", "players"],
+	"additionalProperties": false,
+	"properties": {
+		"$schema": {
+			"type": "string",
+			"format": "uri-reference"
+		},
+		"boardID": {
+			"description": "Identifier of the board",
+			"type": "string"
+		},
+		"players": {
+			"description": "UUIDs of involved players (first player is Mr.X)",
+			"type": "array",
+			"minItems": 2,
+			"items": {
+				"description": "Player UUID",
+				"type": "string",
+				"format": "uuid"
+			}
+		},
+		"starts": {
+			"description": "Location where each player starts",
+			"type": "array",
+			"items": {
+				"description": "Start place",
+				"type": "integer"
+			}
+		},
+		"turns": {
+			"description": "All turns that were already played",
+			"type": "array",
+			"items": {
+				"description": "A single turn (includes moves of all players)",
+				"type": "array",
+				"items": {
+					"description": "A single move (includes all ticket uses by a player in a single move)",
+					"type": "array",
+					"items": {
+						"description": "A ticket use (\"sub-move\")",
+						"type": "object",
+						"required": ["ticket"],
+						"properties": {
+							"ticket": {
+								"description": "The type of ticket that was used",
+								"type": "integer",
+								"minimum": 1,
+								"maximum": 5
+							},
+							"target": {
+								"description": "The place to which the player moved (not required for double ticket)",
+								"type": "integer"
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}

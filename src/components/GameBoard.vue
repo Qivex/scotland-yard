@@ -82,11 +82,12 @@ export default {
 			this.playerMarkers[playerID].setLatLng(this.getCoordsOfPlace(target))
 		},
 		getMoveOptions(playerID, ticketType) {
+			// Todo: Black ticket!
 			let currentPlace = this.playerPlaces[playerID]
 			// Get connections
 			let connectedPlaces = this.board.stations[currentPlace][ticketType] || []
-			// Filter occupied places
-			return connectedPlaces.filter(place => !this.playerPlaces.includes(place))
+			// Filter occupied places (but not Mr.X!)
+			return connectedPlaces.filter(place => !this.playerPlaces.with(0, false).includes(place))
 		},
 		selectTicket(ticketType) {
 			this.selectedTicket = ticketType

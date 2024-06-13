@@ -1,0 +1,16 @@
+{
+	"$schema": "gamestate.schema.json",
+	"boardID": "board1",
+	"players": ["mrx", "det1", "det2"],
+	"starts": [4,1,0],
+	"turns": [
+		[
+			[{"ticket": 1, "target": 3}],
+			[{"ticket": 1, "target": 4}],
+			[{"ticket": 3, "target": 2}]
+		],
+		[
+			[{"ticket": 5},{"ticket": 3, "target": 1},{"ticket": 2, "target": 0}]
+		]
+	]
+}

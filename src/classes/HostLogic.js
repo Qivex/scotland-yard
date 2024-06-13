@@ -51,7 +51,7 @@ export default class HostLogic {
 
 	handleUserMessage(message, respondOptions) {
 		let {command, content} = message
-		let {answer, relay, broadcast} = respondOptions
+		let {answer, relay, broadcast, channel} = respondOptions
 		switch(command) {
 			case "first_contact":
 				answer("id_assign", {uuid: window.crypto.randomUUID()})
@@ -65,6 +65,9 @@ export default class HostLogic {
 				this.players.push(playerInfo)
 				answer("lobby_state", {players: this.players})
 				relay("player_join", playerInfo)
+				// Update UUID-mapping
+				this.uuidMapping[content.uuid] = this.connections.findIndex(c => c[1] === channel)
+				console.log(content.uuid + " -> " + this.uuidMapping[content.uuid])
 				break
 			case "player_appearance_change":
 				this.setPlayerAppearance(content.uuid, content.name, content.color)
@@ -87,7 +90,7 @@ export default class HostLogic {
 
 	handlePrivilegedUserMessage(message, respondOptions) {
 		let {command, content} = message
-		let {answer, relay, broadcast} = respondOptions
+		let {answer, relay, broadcast, channel} = respondOptions
 		switch (command) {
 			case "host_start_game":
 				broadcast("game_start", {
@@ -133,7 +136,9 @@ export default class HostLogic {
 			// Transmit to all users ("broadcast")
 			broadcast: (command, content) => {
 				this.connections.forEach(c => send(c[1], command, content))
-			}
+			},
+			// Raw channel
+			channel: respondChannel
 		}
 	}
 
