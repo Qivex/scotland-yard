@@ -1,9 +1,12 @@
 <template>
 	<template v-if="isIngame">
-		<GameBoard ref="game" :boardID="boardID"
+		<GameBoard
+			ref="game"
+			:boardID="boardID"
 			@loaded="sendLoaded"
 		/>
-		<GameMenu
+		<TicketMenu
+			:tickets="remainingTickets"
 			@ticket="previewTicket"
 		/>
 	</template>
@@ -17,14 +20,16 @@
 		</template>
 		<!--<AcceptDialog v-else/>-->
 	</Lobby>
+	<FullscreenToggle/>
 </template>
 
 <script>
 import GameBoard from "../components/GameBoard.vue"
-import GameMenu from "../components/GameMenu.vue"
+import TicketMenu from "../components/TicketMenu.vue"
 import Lobby from "../components/Lobby.vue"
 import InviteDialog from "../components/InviteDialog.vue"
 import AppearanceSelect from "../components/AppearanceSelect.vue"
+import FullscreenToggle from "../components/FullscreenToggle.vue"
 
 import HostLogic from "../classes/HostLogic.js"
 import { UserConnection } from "webrtc-via-qr"
@@ -33,10 +38,11 @@ export default {
 	name: "MainApp",
 	components: {
 		GameBoard,
-		GameMenu,
+		TicketMenu,
 		Lobby,
 		InviteDialog,
-		AppearanceSelect
+		AppearanceSelect,
+		FullscreenToggle
 	},
 	inject: {
 		isInitialHost: {default: false},
@@ -57,7 +63,8 @@ export default {
 			boardID: undefined,
 			appearances: undefined,
 			// Ingame
-			selectedTicket: undefined
+			selectedTicket: undefined,
+			remainingTickets: [1,2,3,4,5]	// Todo: Request from host
 		}
 	},
 	methods: {

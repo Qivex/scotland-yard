@@ -58,7 +58,7 @@ export default class HostLogic {
 		let {answer, relay, broadcast, channel} = respondOptions
 		switch(command) {
 			case "first_contact":
-				answer("id_assign", {uuid: window.crypto.randomUUID()})
+				answer("id_assign", {uuid: window.crypto.randomUUID?.() || "localhost"})
 				break
 			case "player_join":
 				const playerInfo = {
