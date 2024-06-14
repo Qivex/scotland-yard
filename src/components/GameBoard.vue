@@ -49,6 +49,7 @@ export default {
 			this.playerMarkers[uuid].addTo(this.map)
 		},
 		displayMoveOptions(targets, color) {
+			this.hideMoveOptions()	// Dont overlap with previous ones!
 			for (const place of targets) {
 				let marker = circle(this.getCoordsOfPlace(place), color)
 				marker.on("click", () => {

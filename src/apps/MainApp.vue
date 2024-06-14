@@ -4,7 +4,7 @@
 			@loaded="sendLoaded"
 		/>
 		<GameMenu
-			@ticket="selectTicket"
+			@ticket="previewTicket"
 		/>
 	</template>
 	<Lobby v-else ref="lobby" :ownUUID="uuid">
@@ -55,7 +55,9 @@ export default {
 			uuid: undefined,
 			// Board setup
 			boardID: undefined,
-			appearances: undefined
+			appearances: undefined,
+			// Ingame
+			selectedTicket: undefined
 		}
 	},
 	methods: {
@@ -87,6 +89,9 @@ export default {
 					break
 				case "player_locations":
 					this.addPlayerMarkers(content.locations)
+					break
+				case "move_options":
+					this.$refs.game.displayMoveOptions(content.targets, "#fff")
 					break
 				default:
 					console.log(command + " not handled")
@@ -134,11 +139,20 @@ export default {
 				this.$refs.game.addPlayerMarker(player.uuid, place, player.name, player.color, place === null)	// Hidden when no place
 			})
 		},
-		selectTicket(ticketType) {
-			/* Todo:
-			- send "get_move_options" to host
-			- draw response using this.$refs.game.displayMoveOptions()
-			*/
+		previewTicket(ticketType) {
+			if (ticketType === this.selectedTicket) {
+				this.selectedTicket = false
+				this.$refs.game.hideMoveOptions()
+			} else {
+				this.selectedTicket = ticketType
+				this.channelToHost.send(JSON.stringify({
+					command: "get_move_options",
+					content: {
+						"uuid": this.uuid,
+						"ticket": ticketType
+					}
+				}))
+			}
 		}
 	},
 	mounted() {

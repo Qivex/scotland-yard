@@ -101,6 +101,10 @@ export default class HostLogic {
 					})
 				}
 				break
+			case "get_move_options":
+				let playerIndex = this.uuidMapping[content.uuid]
+				answer("move_options", {targets: this.gameLogic.getMoveOptions(playerIndex, content.ticket)})
+				break
 			default:
 				answer("command_not_recognized", {command})
 				break
