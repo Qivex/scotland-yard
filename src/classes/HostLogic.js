@@ -42,6 +42,10 @@ export default class HostLogic {
 		return this.players.find(p => p.uuid === uuid)
 	}
 
+	getPlayerIndexByUUID(uuid) {
+		return this.uuidMapping[uuid]
+	}
+
 	setPlayerAppearance(uuid, name, color) {
 		let p = this.getPlayerByUUID(uuid)
 		p.name = name
@@ -51,6 +55,35 @@ export default class HostLogic {
 	setPlayerReady(uuid) {
 		let p = this.getPlayerByUUID(uuid)
 		p.ready = true
+	}
+
+	sendPositionsToAll() {
+		// Send player locations
+		let mrxLocation = this.gameLogic.playerPlaces[0]
+		this.players.forEach((player, index) => {
+			let channel = this.getConnectionByUUID(player.uuid)[1]
+			channel.send(JSON.stringify({
+				command: "player_locations",
+				content: {
+					locations: this.gameLogic.playerPlaces.with(0, index === 0 ? mrxLocation : null)
+				}
+			}))
+		})
+	}
+
+	continueGame() {
+		// This acts like an iterator until the end of the game
+		// Its called for every move
+		let nextPlayer = this.gameLogic.nextMove()
+		if (nextPlayer !== false) {
+			send(this.connections[nextPlayer][1], "turn_start")
+		} else {
+			// Game is over
+			for (let connection of this.connections) {
+				let channel = connection[1]
+				send(channel, "game_finished", {winner: this.gameLogic.winner})
+			}
+		}
 	}
 
 	handleUserMessage(message, respondOptions) {
@@ -88,22 +121,22 @@ export default class HostLogic {
 				break
 			case "player_loaded":
 				if (++this.loadedCount >= this.players.length) {
-					// Send player locations
-					let mrxLocation = this.gameLogic.playerPlaces[0]
-					this.players.forEach((player, index) => {
-						let channel = this.getConnectionByUUID(player.uuid)[1]
-						channel.send(JSON.stringify({
-							command: "player_locations",
-							content: {
-								locations: this.gameLogic.playerPlaces.with(0, index === 0 ? mrxLocation : null)
-							}
-						}))
-					})
+					this.sendPositionsToAll()
+					// First call, this actually starts the main game cycle
+					this.continueGame()
 				}
 				break
 			case "get_move_options":
-				let playerIndex = this.uuidMapping[content.uuid]
-				answer("move_options", {targets: this.gameLogic.getMoveOptions(playerIndex, content.ticket)})
+				answer("move_options", {targets: this.gameLogic.getMoveOptions(this.getPlayerIndexByUUID(content.uuid), content.ticket)})
+				break
+			case "player_move":
+				if (this.gameLogic.doMove(this.getPlayerIndexByUUID(content.uuid), content.ticket, content.target)) {
+					answer("turn_successful")
+					broadcast("player_move", content)
+					this.continueGame()
+				} else {
+					answer("turn_failed")
+				}
 				break
 			default:
 				answer("command_not_recognized", {command})

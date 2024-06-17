@@ -3,11 +3,12 @@
 		<GameBoard
 			ref="game"
 			:boardID="boardID"
-			@loaded="sendLoaded"
+			@loaded="onLoaded"
+			@selecttarget="onSelectTarget"
 		/>
 		<TicketMenu
 			:tickets="remainingTickets"
-			@ticket="previewTicket"
+			@selectticket="onSelectTicket"
 		/>
 	</template>
 	<Lobby v-else ref="lobby" :ownUUID="uuid">
@@ -64,7 +65,7 @@ export default {
 			appearances: undefined,
 			// Ingame
 			selectedTicket: undefined,
-			remainingTickets: [1,2,3,4,5]	// Todo: Request from host
+			remainingTickets: undefined
 		}
 	},
 	methods: {
@@ -100,6 +101,25 @@ export default {
 				case "move_options":
 					this.$refs.game.displayMoveOptions(content.targets, "#fff")
 					break
+				case "player_move":
+					this.$refs.game.movePlayerMarker(content.uuid, content.target)
+					break
+				case "turn_start":
+					window.alert("Its your turn!")
+					break
+				case "turn_successful":
+					// Actually deduce the ticket
+					this.remainingTickets[this.selectedTicket-1]--
+					// Remove selection
+					this.selectedTicket = false
+					window.alert("Turn successful!")
+					break
+				case "turn_failed":
+					window.alert("Invalid move!")
+					break
+				case "game_finished":
+					window.alert("Game was won by " + content.winner)
+					break
 				default:
 					console.log(command + " not handled")
 					break
@@ -127,7 +147,10 @@ export default {
 				}
 			}))
 		},
-		sendLoaded() {
+		onLoaded(remainingTickets) {
+			// Initialize remaining tickets (only possible after board has loaded)
+			this.remainingTickets = remainingTickets
+			// Let host know
 			this.channelToHost.send(JSON.stringify({
 				command: "player_loaded",
 				content: {
@@ -146,7 +169,7 @@ export default {
 				this.$refs.game.addPlayerMarker(player.uuid, place, player.name, player.color, place === null)	// Hidden when no place
 			})
 		},
-		previewTicket(ticketType) {
+		onSelectTicket(ticketType) {
 			if (ticketType === this.selectedTicket) {
 				this.selectedTicket = false
 				this.$refs.game.hideMoveOptions()
@@ -160,6 +183,16 @@ export default {
 					}
 				}))
 			}
+		},
+		onSelectTarget(target) {
+			this.channelToHost.send(JSON.stringify({
+				command: "player_move",
+				content: {
+					"uuid": this.uuid,
+					ticket: this.selectedTicket,
+					target: target
+				}
+			}))
 		}
 	},
 	mounted() {

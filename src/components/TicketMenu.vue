@@ -2,11 +2,11 @@
 	<menu class="ticketmenu">
 		<button
 			class="ticket"
-			v-for="(name,index) in ['Taxi','Bus','Subway','Black','2x']"
-			v-text="tickets[index]"
-			:title="name"
-			:disabled="tickets[index] <= 0"
-			@click="$emit('ticket', index+1)"
+			v-for="(remaining,index) in tickets"
+			v-text="remaining"
+			:title="title[index]"
+			:disabled="remaining <= 0"
+			@click="$emit('selectticket', index+1)"
 		/>
 	</menu>
 </template>
@@ -18,7 +18,12 @@ export default {
 		tickets: Array,
 		names: Array
 	},
-	emits: ["ticket"]
+	data() {
+		return {
+			title: ['Taxi','Bus','Subway','Black','2x']
+		}
+	},
+	emits: ["selectticket"]
 }
 </script>
 

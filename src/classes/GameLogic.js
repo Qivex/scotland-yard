@@ -148,6 +148,8 @@ export default class GameLogic {
 		isValid &&= this.getMoveOptions(playerIndex, ticketType).includes(target)
 		// Execute turn
 		if (isValid) {
+			// Start turn if no previous move
+			this.turns[this.currentTurn] ||= []
 			// Assign move if no previous sub-move
 			this.turns[this.currentTurn][this.currentMove] ||= []
 			// Reduce ticket count

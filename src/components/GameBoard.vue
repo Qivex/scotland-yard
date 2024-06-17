@@ -14,7 +14,7 @@ export default {
 	name: "GameBoard",
 	emits: [
 		"loaded",
-		"move"
+		"selecttarget"
 	],
 	props: {
 		boardID: String
@@ -54,7 +54,7 @@ export default {
 				let marker = circle(this.getCoordsOfPlace(place), color)
 				marker.on("click", () => {
 					this.hideMoveOptions()
-					this.$emit("targetselect", place)
+					this.$emit("selecttarget", place)
 				})
 				marker.addTo(this.map)
 				this.currentMoveOptions.push(marker)
@@ -98,7 +98,8 @@ export default {
 					maxNativeZoom: 0
 				}).addTo(this.map)
 				// Emit when board is ready to add players
-				this.$emit("loaded")
+				let isMrX = true	// Todo
+				this.$emit("loaded", this.board.tickets[isMrX ? 0 : 1])
 			})
 	}
 }
