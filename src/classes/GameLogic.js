@@ -3,11 +3,11 @@ function randomInt(limit) {
 }
 
 const TICKET_TYPES = {
-	TAXI: 1,
-	BUS: 2,
-	SUBWAY: 3,
-	BLACK: 4,
-	DOUBLE: 5
+	TAXI: 0,
+	BUS: 1,
+	SUBWAY: 2,
+	BLACK: 3,
+	DOUBLE: 4
 }
 
 export default class GameLogic {
@@ -88,10 +88,15 @@ export default class GameLogic {
 	}
 
 	getMoveOptions(playerIndex, ticketType) {
-		// Todo: Black ticket!
 		let currentPlace = this.playerPlaces[playerIndex]
 		// Get connections
-		let connectedPlaces = this.board.stations[currentPlace][ticketType] || []
+		let connectedPlaces
+		if (ticketType === TICKET_TYPES.BLACK) {
+			let allConnections = this.board.connections[currentPlace].flat()	// Could include duplicates!
+			connectedPlaces = Array.from(new Set(allConnections))	// Remove duplicates
+		} else {
+			connectedPlaces = this.board.connections[currentPlace][ticketType] || []
+		}
 		// Filter occupied places (but not Mr.X!)
 		return connectedPlaces.filter(place => !this.playerPlaces.with(0, false).includes(place))
 	}
@@ -114,12 +119,16 @@ export default class GameLogic {
 			return true
 		}
 		// Win condition: No move possible
+		let playerIndex = this.currentMove
 		let moveCount = 0
-		for (let ticketType = 1; ticketType <= 4; ticketType++) {
-			moveCount += this.getMoveOptions(this.currentMove, ticketType)
+		for (let ticketType = 0; ticketType <= 3; ticketType++) {
+			// Only consider tickets the player actually has!
+			if (this.remainingTickets[playerIndex][ticketType] > 0) {
+				moveCount += this.getMoveOptions(playerIndex, ticketType)
+			}
 		}
 		if (moveCount <= 0) {
-			this.winner = (this.currentMove === 0) ? "detectives" : "mrx"
+			this.winner = (playerIndex === 0) ? "detectives" : "mrx"
 			return true
 		}
 		// Continue game
@@ -135,7 +144,7 @@ export default class GameLogic {
 
 	doMove(playerIndex, ticketType, target) {
 		// console.assert(this.players.includes(uuid), "Unknown player!")
-		console.assert(1 <= ticketType <= 5, "Unknown ticket!")
+		console.assert(0 <= ticketType <= 4, "Unknown ticket!")
 		console.assert(0 <= target < this.board.stations.length, "Unknown target!")
 
 		// let playerIndex = this.players.indexOf(uuid)
@@ -154,12 +163,16 @@ export default class GameLogic {
 			this.turns[this.currentTurn][this.currentMove] ||= []
 			// Reduce ticket count
 			this.remainingTickets[playerIndex][ticketType]--
+			// Give Mr.X used ticket
+			if (playerIndex > 0) {
+				this.remainingTickets[0][ticketType]++
+			}
 			// Add sub-move to move
 			this.turns[this.currentTurn][this.currentMove].push({
 				ticket: this.ticketType,
-				target: (ticketType === 5 ? undefined : target)	// Dont include target on double ticket
+				target: (ticketType === TICKET_TYPES.DOUBLE ? undefined : target)	// Dont include target on double ticket
 			})
-			if (ticketType !== 5) {
+			if (ticketType !== TICKET_TYPES.DOUBLE) {
 				this.playerPlaces[playerIndex] = target
 				// Only next move if its either 1 (single sub-move) or 3 (second sub-move of double)
 				if (this.turns[this.currentTurn][this.currentMove].length !== 2) {

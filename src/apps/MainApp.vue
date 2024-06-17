@@ -108,14 +108,14 @@ export default {
 					window.alert("Its your turn!")
 					break
 				case "turn_successful":
-					// Actually deduce the ticket
-					this.remainingTickets[this.selectedTicket-1]--
-					// Remove selection
-					this.selectedTicket = false
+					this.selectedTicket = false	// Remove ticket selection
 					window.alert("Turn successful!")
 					break
 				case "turn_failed":
 					window.alert("Invalid move!")
+					break
+				case "ticket_update":
+					this.remainingTickets = content.tickets
 					break
 				case "game_finished":
 					window.alert("Game was won by " + content.winner)
@@ -147,10 +147,7 @@ export default {
 				}
 			}))
 		},
-		onLoaded(remainingTickets) {
-			// Initialize remaining tickets (only possible after board has loaded)
-			this.remainingTickets = remainingTickets
-			// Let host know
+		onLoaded() {
 			this.channelToHost.send(JSON.stringify({
 				command: "player_loaded",
 				content: {

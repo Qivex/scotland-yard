@@ -120,6 +120,9 @@ export default class HostLogic {
 				}
 				break
 			case "player_loaded":
+				// Ticket menu is loaded
+				answer("ticket_update", {tickets: this.gameLogic.remainingTickets[this.getPlayerIndexByUUID(content.uuid)]})
+				// All players loaded
 				if (++this.loadedCount >= this.players.length) {
 					this.sendPositionsToAll()
 					// First call, this actually starts the main game cycle
@@ -133,6 +136,12 @@ export default class HostLogic {
 				if (this.gameLogic.doMove(this.getPlayerIndexByUUID(content.uuid), content.ticket, content.target)) {
 					answer("turn_successful")
 					broadcast("player_move", content)
+					// Update ticket count of Mr.X (always, because he either receives or uses)
+					send(this.connections[0][1], "ticket_update", {tickets: this.gameLogic.remainingTickets[0]})
+					// Update ticket count of detective (used ticket)
+					if (this.getPlayerIndexByUUID(content.uuid) > 0) {
+						answer("ticket_update", {tickets: this.gameLogic.remainingTickets[this.getPlayerIndexByUUID(content.uuid)]})
+					}
 					this.continueGame()
 				} else {
 					answer("turn_failed")

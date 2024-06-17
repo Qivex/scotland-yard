@@ -40,26 +40,28 @@
 			"description": "All stations on the board that can be visited",
 			"type": "array",
 			"items": {
-				"description": "A single station (includes coordinates on the board, followed by the connections available when using each ticket type)",
+				"description": "Coordinates of a single station on the map",
 				"type": "array",
-				"minItems": 2,
-				"maxItems": 5,
+				"additionalItems": false,
 				"items": [
 					{
-						"description": "Coordinates of this station on the map (includes latitude & longitude)",
-						"type": "array",
-						"additionalItems": false,
-						"items": [
-							{
-								"description": "Latitude",
-								"type": "number"
-							},
-							{
-								"description": "Longitude",
-								"type": "number"
-							}
-						]
+						"description": "Latitude",
+						"type": "number"
 					},
+					{
+						"description": "Longitude",
+						"type": "number"
+					}
+				]
+			}
+		},
+		"connections": {
+			"description": "All connections of the stations",
+			"type": "array",
+			"items": {
+				"description": "All available connections of a single station",
+				"type": "array",
+				"items": [
 					{
 						"description": "Connections available when using a taxi",
 						"type": "array",

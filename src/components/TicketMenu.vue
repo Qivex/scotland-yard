@@ -6,7 +6,7 @@
 			v-text="remaining"
 			:title="title[index]"
 			:disabled="remaining <= 0"
-			@click="$emit('selectticket', index+1)"
+			@click="$emit('selectticket', index)"
 		/>
 	</menu>
 </template>

@@ -29,7 +29,7 @@ export default {
 	},
 	methods: {
 		getCoordsOfPlace(place) {
-			return this.board.stations[place]?.[0] || [0,0]
+			return this.board.stations[place] || [0,0]
 		},
 		addPlayerMarker(uuid, place, name, color, hidden) {
 			let marker = circle(this.getCoordsOfPlace(place), color)
@@ -98,8 +98,7 @@ export default {
 					maxNativeZoom: 0
 				}).addTo(this.map)
 				// Emit when board is ready to add players
-				let isMrX = true	// Todo
-				this.$emit("loaded", this.board.tickets[isMrX ? 0 : 1])
+				this.$emit("loaded")
 			})
 	}
 }

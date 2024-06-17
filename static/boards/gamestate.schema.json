@@ -48,8 +48,8 @@
 							"ticket": {
 								"description": "The type of ticket that was used",
 								"type": "integer",
-								"minimum": 1,
-								"maximum": 5
+								"minimum": 0,
+								"maximum": 4
 							},
 							"target": {
 								"description": "The place to which the player moved (not required for double ticket)",
