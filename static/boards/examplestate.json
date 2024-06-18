@@ -5,12 +5,12 @@
 	"starts": [4,1,0],
 	"turns": [
 		[
-			[{"ticket": 0, "target": 3}],
-			[{"ticket": 0, "target": 4}],
-			[{"ticket": 2, "target": 2}]
+			{"ticket": 0, "target": 3},
+			{"ticket": 0, "target": 4},
+			{"ticket": 2, "target": 2}
 		],
 		[
-			[{"ticket": 4},{"ticket": 2, "target": 1},{"ticket": 1, "target": 0}]
+			{"firstTicket": 2, "firstTarget": 1, "secondTicket": 1, "secondTarget": 0}
 		]
 	]
 }

@@ -2,3 +2,8 @@ body {
 	height: 100vh;
 	margin: 0;
 }
+
+/* Ugly rectangle on clicked markers */
+:focus {
+	outline: none;
+}

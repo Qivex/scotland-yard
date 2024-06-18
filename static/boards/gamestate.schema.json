@@ -39,26 +39,44 @@
 				"type": "array",
 				"items": {
 					"description": "A single move (includes all ticket uses by a player in a single move)",
-					"type": "array",
-					"items": {
-						"description": "A ticket use (\"sub-move\")",
-						"type": "object",
-						"required": ["ticket"],
-						"properties": {
-							"ticket": {
-								"description": "The type of ticket that was used",
-								"type": "integer",
-								"minimum": 0,
-								"maximum": 4
-							},
-							"target": {
-								"description": "The place to which the player moved (not required for double ticket)",
-								"type": "integer"
+					"oneOf": [
+						{
+							"description": "A move using a single ticket",
+							"type": "object",
+							"required": ["ticket", "target"],
+							"additionalProperties": false,
+							"properties": {
+								"ticket": {"$ref": "#/$defs/ticket"},
+								"target": {"$ref": "#/$defs/target"}
+							}
+						},
+						{
+							"description": "A move using a double ticket",
+							"type": "object",
+							"required": ["firstTicket", "firstTarget", "secondTicket", "secondTarget"],
+							"additionalProperties": false,
+							"properties": {
+								"firstTicket": {"$ref": "#/$defs/ticket"},
+								"firstTarget": {"$ref": "#/$defs/target"},
+								"secondTicket": {"$ref": "#/$defs/ticket"},
+								"secondTarget": {"$ref": "#/$defs/target"}
 							}
 						}
-					}
+					]
 				}
 			}
+		}
+	},
+	"$defs": {
+		"ticket": {
+			"description": "The type of ticket that was used",
+			"type": "integer",
+			"minimum": 0,
+			"maximum": 3
+		},
+		"target": {
+			"description": "The station to which the player moved",
+			"type": "integer"
 		}
 	}
 }

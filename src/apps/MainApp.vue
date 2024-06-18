@@ -65,7 +65,8 @@ export default {
 			appearances: undefined,
 			// Ingame
 			selectedTicket: undefined,
-			remainingTickets: undefined
+			remainingTickets: undefined,
+			isDoubleTurn: false
 		}
 	},
 	methods: {
@@ -173,7 +174,7 @@ export default {
 			} else {
 				this.selectedTicket = ticketType
 				this.channelToHost.send(JSON.stringify({
-					command: "get_move_options",
+					command: "select_ticket",
 					content: {
 						"uuid": this.uuid,
 						"ticket": ticketType
@@ -183,7 +184,7 @@ export default {
 		},
 		onSelectTarget(target) {
 			this.channelToHost.send(JSON.stringify({
-				command: "player_move",
+				command: "select_target",
 				content: {
 					"uuid": this.uuid,
 					ticket: this.selectedTicket,

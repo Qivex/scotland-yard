@@ -129,10 +129,12 @@ export default class HostLogic {
 					this.continueGame()
 				}
 				break
-			case "get_move_options":
+			case "select_ticket":
+				// Todo: Handle double ticket
 				answer("move_options", {targets: this.gameLogic.getMoveOptions(this.getPlayerIndexByUUID(content.uuid), content.ticket)})
 				break
-			case "player_move":
+			case "select_target":
+				// Todo: Handle double ticket
 				if (this.gameLogic.doMove(this.getPlayerIndexByUUID(content.uuid), content.ticket, content.target)) {
 					answer("turn_successful")
 					broadcast("player_move", content)
@@ -193,7 +195,7 @@ export default class HostLogic {
 			relay: (command, content) => {
 				this.connections.forEach(c => {
 					let relayChannel = c[1]
-					if (relayChannel != respondChannel) {
+					if (relayChannel !== respondChannel) {
 						send(relayChannel, command, content)
 					}
 				})

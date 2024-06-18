@@ -38,7 +38,7 @@ export default class GameLogic {
 				this.boardID = state.boardID
 				this.players = state.players
 				this.starts = state.starts || []
-				this.turns = state.turns || []
+				// this.turns = state.turns || []
 				// Determine initial locations
 				if (this.starts.length === 0) {
 					let startPlaces = new Set()
@@ -48,29 +48,27 @@ export default class GameLogic {
 					}
 					this.starts = Array.from(startPlaces)
 				}
-				// Determine current turn & move
-				if (this.turns.length === 0) {
-					this.currentTurn = 0
-					this.currentMove = 0
-				} else {
-					this.currentTurn = this.turns.length - 1
-					this.currentMove = this.turns[this.currentTurn].length
-				}
-				// Determine current tickets & positions
+				// Initialize values
+				this.currentTurn = 0
+				this.currentMove = 0
+				this.turns = []
+				this.playerPlaces = Array.from(this.starts)
 				for (let index = 0; index < this.players.length; index++) {
-					// Initial tickets & positions
-					this.remainingTickets[index] = this.board.tickets[Math.sign(index)]
-					this.playerPlaces[index] = this.starts[index]
-					// Replay turns
-					for (let turn of this.turns) {
-						let move = turn[index]
-						if (Array.isArray(move)) {
-							for (let subMove of move) {
-								// Subtract used tickets
-								this.remainingTickets[index][subMove.ticket]--
-								// Update position
-								this.playerPlaces[index] = subMove.target
+					// Copy from correct list (0 = Mr.X, 1 = detectives)
+					this.remainingTickets[index] = Array.from(this.board.tickets[Math.sign(index)])
+				}
+				// Replay turns (to calculate current values)
+				for (let turn of state.turns) {
+					for (let move of turn) {
+						let currentPlayer = this.nextMove()
+						if (currentPlayer !== false) {
+							let valid = true
+							if (Object.hasOwn(move, "secondTarget")) {
+								valid = this.doDoubleMove(currentPlayer, move.firstTicket, move.firstTarget, move.secondTicket, move.secondTarget)
+							} else {
+								valid = this.doMove(currentPlayer, move.ticket, move.target)
 							}
+							console.assert(valid, move)
 						}
 					}
 				}
@@ -78,7 +76,7 @@ export default class GameLogic {
 	}
 
 	exportState() {
-		// Don't include properties which can be calculated from these
+		// Don't include properties which can be calculated from these by replaying turns
 		return {
 			boardID: this.boardID,
 			players: this.players,
@@ -88,8 +86,10 @@ export default class GameLogic {
 	}
 
 	getMoveOptions(playerIndex, ticketType) {
-		let currentPlace = this.playerPlaces[playerIndex]
-		// Get connections
+		return this.getFreeConnections(this.playerPlaces[playerIndex], ticketType)
+	}
+
+	getFreeConnections(currentPlace, ticketType) {
 		let connectedPlaces
 		if (ticketType === TICKET_TYPES.BLACK) {
 			let allConnections = this.board.connections[currentPlace].flat()	// Could include duplicates!
@@ -139,15 +139,14 @@ export default class GameLogic {
 		if (this.isMatchOver()) {
 			return false
 		}
-		return this.currentMove	// Only increase this AFTER a successful move
+		return this.currentMove	// Only increases AFTER a successful move
 	}
 
 	doMove(playerIndex, ticketType, target) {
-		// console.assert(this.players.includes(uuid), "Unknown player!")
-		console.assert(0 <= ticketType <= 4, "Unknown ticket!")
-		console.assert(0 <= target < this.board.stations.length, "Unknown target!")
+		console.assert(0 <= playerIndex && playerIndex < this.players.length, "Unknown player!")
+		console.assert(0 <= ticketType && ticketType <= 3, "Unknown ticket!")
+		console.assert(0 <= target && target < this.board.stations.length, "Unknown target!")
 
-		// let playerIndex = this.players.indexOf(uuid)
 		let isValid = true
 		// Is it this players turn?
 		isValid &&= (playerIndex === this.currentMove)
@@ -155,30 +154,71 @@ export default class GameLogic {
 		isValid &&= (this.remainingTickets[playerIndex][ticketType] > 0)
 		// Is the target connected & free?
 		isValid &&= this.getMoveOptions(playerIndex, ticketType).includes(target)
-		// Execute turn
+		// Execute move
 		if (isValid) {
 			// Start turn if no previous move
 			this.turns[this.currentTurn] ||= []
-			// Assign move if no previous sub-move
-			this.turns[this.currentTurn][this.currentMove] ||= []
 			// Reduce ticket count
 			this.remainingTickets[playerIndex][ticketType]--
 			// Give Mr.X used ticket
 			if (playerIndex > 0) {
 				this.remainingTickets[0][ticketType]++
 			}
-			// Add sub-move to move
-			this.turns[this.currentTurn][this.currentMove].push({
-				ticket: this.ticketType,
-				target: (ticketType === TICKET_TYPES.DOUBLE ? undefined : target)	// Dont include target on double ticket
-			})
-			if (ticketType !== TICKET_TYPES.DOUBLE) {
-				this.playerPlaces[playerIndex] = target
-				// Only next move if its either 1 (single sub-move) or 3 (second sub-move of double)
-				if (this.turns[this.currentTurn][this.currentMove].length !== 2) {
-					this.currentMove++
-				}
+			// Add move to turn log
+			this.turns[this.currentTurn][this.currentMove] = {
+				ticket: ticketType,
+				target: target
 			}
+			// Move player
+			this.playerPlaces[playerIndex] = target
+			// Next move
+			this.currentMove++
+		}
+		return isValid
+	}
+
+	doDoubleMove(playerIndex, firstTicket, firstTarget, secondTicket, secondTarget) {
+		console.assert(0 <= playerIndex && playerIndex < this.players.length, "Unknown player!")
+		console.assert(0 <= firstTicket && firstTicket <= 3, "Unknown first ticket!")
+		console.assert(0 <= secondTicket && secondTicket <= 3, "Unknown second ticket!")
+		console.assert(0 <= firstTarget && firstTarget < this.board.stations.length, "Unknown first target!")
+		console.assert(0 <= secondTarget && secondTarget < this.board.stations.length, "Unknown second target!")
+
+		let isValid = true
+		// Is it this players turn?
+		isValid &&= (playerIndex === this.currentMove)
+		// Does the player have the required tickets?
+		isValid &&= (this.remainingTickets[playerIndex][TICKET_TYPES.DOUBLE] > 0)
+		isValid &&= (this.remainingTickets[playerIndex][firstTicket] > 0)
+		isValid &&= (this.remainingTickets[playerIndex][secondTicket] > 0)
+		// Are both targets connected and free?
+		isValid &&= this.getMoveOptions(playerIndex, firstTicket).includes(firstTarget)
+		isValid &&= this.getFreeConnections(firstTarget, secondTicket).includes(secondTarget)
+		// Execute move
+		if (isValid) {
+			// Start turn if no previous move
+			this.turns[this.currentTurn] ||= []
+			// Reduce ticket count
+			this.remainingTickets[playerIndex][TICKET_TYPES.DOUBLE]--
+			this.remainingTickets[playerIndex][firstTicket]--
+			this.remainingTickets[playerIndex][secondTicket]--
+			// Give Mr.X used tickets
+			if (playerIndex > 0) {
+				this.remainingTickets[0][TICKET_TYPES.DOUBLE]++
+				this.remainingTickets[0][firstTicket]++
+				this.remainingTickets[0][secondTicket]++
+			}
+			// Add move to turn log
+			this.turns[this.currentTurn][this.currentMove] = {
+				firstTicket,
+				firstTarget,
+				secondTicket,
+				secondTarget
+			}
+			// Move player
+			this.playerPlaces[playerIndex] = secondTarget
+			// Next move
+			this.currentMove++
 		}
 		return isValid
 	}
