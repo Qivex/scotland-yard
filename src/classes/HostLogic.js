@@ -104,7 +104,6 @@ export default class HostLogic {
 				relay("player_join", playerInfo)
 				// Update UUID-mapping
 				this.uuidMapping[content.uuid] = this.connections.findIndex(c => c[1] === channel)
-				console.log(content.uuid + " -> " + this.uuidMapping[content.uuid])
 				break
 			case "player_appearance_change":
 				this.setPlayerAppearance(content.uuid, content.name, content.color)

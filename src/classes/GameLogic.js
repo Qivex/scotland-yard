@@ -57,18 +57,20 @@ export default class GameLogic {
 					// Copy from correct list (0 = Mr.X, 1 = detectives)
 					this.remainingTickets[index] = Array.from(this.board.tickets[Math.sign(index)])
 				}
-				// Replay turns (to calculate current values)
-				for (let turn of state.turns) {
-					for (let move of turn) {
-						let currentPlayer = this.nextMove()
-						if (currentPlayer !== false) {
-							let valid = true
-							if (Object.hasOwn(move, "secondTarget")) {
-								valid = this.doDoubleMove(currentPlayer, move.firstTicket, move.firstTarget, move.secondTicket, move.secondTarget)
-							} else {
-								valid = this.doMove(currentPlayer, move.ticket, move.target)
+				// Replay all previous turns (to calculate current values)
+				if (state.turns) {
+					for (let turn of state.turns) {
+						for (let move of turn) {
+							let currentPlayer = this.nextMove()
+							if (currentPlayer !== false) {
+								let valid = true
+								if (Object.hasOwn(move, "secondTarget")) {
+									valid = this.doDoubleMove(currentPlayer, move.firstTicket, move.firstTarget, move.secondTicket, move.secondTarget)
+								} else {
+									valid = this.doMove(currentPlayer, move.ticket, move.target)
+								}
+								console.assert(valid, "Invalid move in turn log!")
 							}
-							console.assert(valid, move)
 						}
 					}
 				}
