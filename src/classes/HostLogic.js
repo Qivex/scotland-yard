@@ -31,6 +31,10 @@ export default class HostLogic {
 		// State
 		this.loadedCount = 0
 		this.gameLogic = undefined
+		// Keep track of double ticket
+		this.doubleMovePhase = 0	// 0 = no double move, 1 = first submove, 2 = second submove
+		this.firstTicket = undefined
+		this.firstTarget = undefined
 	}
 
 	getConnectionByUUID(uuid) {
@@ -129,23 +133,53 @@ export default class HostLogic {
 				}
 				break
 			case "select_ticket":
-				// Todo: Handle double ticket
-				answer("move_options", {targets: this.gameLogic.getMoveOptions(this.getPlayerIndexByUUID(content.uuid), content.ticket)})
+				if (content.ticket === 4) {
+					this.doubleMovePhase = 1
+					answer("double_move_started")
+				} else if (this.doubleMovePhase === 2) {
+					// Player has not moved yet in gameLogic, but wants travel options from firstTarget!
+					answer("move_options", {targets: this.gameLogic.getFreeConnections(this.firstTarget, content.ticket)})
+				} else {
+					answer("move_options", {targets: this.gameLogic.getMoveOptions(this.getPlayerIndexByUUID(content.uuid), content.ticket)})
+				}
 				break
 			case "select_target":
-				// Todo: Handle double ticket
-				if (this.gameLogic.doMove(this.getPlayerIndexByUUID(content.uuid), content.ticket, content.target)) {
-					answer("turn_successful")
-					broadcast("player_move", content)
-					// Update ticket count of Mr.X (always, because he either receives or uses)
-					send(this.connections[0][1], "ticket_update", {tickets: this.gameLogic.remainingTickets[0]})
-					// Update ticket count of detective (used ticket)
-					if (this.getPlayerIndexByUUID(content.uuid) > 0) {
-						answer("ticket_update", {tickets: this.gameLogic.remainingTickets[this.getPlayerIndexByUUID(content.uuid)]})
-					}
-					this.continueGame()
+				if (this.doubleMovePhase === 1) {
+					// Only preview the move (dont update state yet)
+					answer("player_move", content)
+					this.firstTicket = content.ticket
+					this.firstTarget = content.target
+					this.doubleMovePhase++
 				} else {
-					answer("turn_failed")
+					// Actually try the move
+					let playerIndex = this.getPlayerIndexByUUID(content.uuid)
+					let isValid = false
+					if (this.doubleMovePhase === 2) {
+						isValid = this.gameLogic.doDoubleMove(playerIndex, this.firstTicket, this.firstTarget, content.ticket, content.target)
+					} else {
+						isValid = this.gameLogic.doMove(this.getPlayerIndexByUUID(content.uuid), content.ticket, content.target)
+					}
+					if (isValid) {
+						answer("turn_successful")
+						// Update ticket count of Mr.X (always, because he either receives or uses)
+						send(this.connections[0][1], "ticket_update", {tickets: this.gameLogic.remainingTickets[0]})
+						if (this.getPlayerIndexByUUID(content.uuid) > 0) {
+							// Update ticket count of detective (used ticket)
+							answer("ticket_update", {tickets: this.gameLogic.remainingTickets[playerIndex]})
+							broadcast("player_move", content)
+						} else {
+							// Dont give away new location of Mr.X
+							answer("player_move", content)
+						}
+						this.continueGame()
+					} else {
+						answer("turn_failed")
+						if (this.doubleMovePhase === 2) {
+							// Revert location from preview to actual place
+							answer("player_move", {uuid: content.uuid, target: this.gameLogic.playerPlaces[playerIndex]})
+						}
+					}
+					this.doubleMovePhase = 0
 				}
 				break
 			default:

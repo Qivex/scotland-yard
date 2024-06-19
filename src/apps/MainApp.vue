@@ -8,6 +8,7 @@
 		/>
 		<TicketMenu
 			:tickets="remainingTickets"
+			:class="{double: isDoubleMove}"
 			@selectticket="onSelectTicket"
 		/>
 	</template>
@@ -66,7 +67,7 @@ export default {
 			// Ingame
 			selectedTicket: undefined,
 			remainingTickets: undefined,
-			isDoubleTurn: false
+			isDoubleMove: false
 		}
 	},
 	methods: {
@@ -105,14 +106,19 @@ export default {
 				case "player_move":
 					this.$refs.game.movePlayerMarker(content.uuid, content.target)
 					break
+				case "double_move_started":
+					this.isDoubleMove = true	// Only visual
+					break
 				case "turn_start":
 					window.alert("Its your turn!")
 					break
 				case "turn_successful":
 					this.selectedTicket = false	// Remove ticket selection
+					this.isDoubleMove = false
 					window.alert("Turn successful!")
 					break
 				case "turn_failed":
+					this.isDoubleMove = false
 					window.alert("Invalid move!")
 					break
 				case "ticket_update":

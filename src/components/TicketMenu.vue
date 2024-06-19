@@ -43,7 +43,7 @@ export default {
 	pointer-events: none;
 }
 
-.ticketmenu button {
+.ticket {
 	width: 24vh;
 	height: 15vh;
 	padding: 0;
@@ -53,31 +53,35 @@ export default {
 	pointer-events: initial;
 }
 
-.ticketmenu button:disabled {
+.ticket:disabled {
 	filter: contrast(25%);
 }
 
-.ticketmenu button[title="Taxi"] {
+.double .ticket {
+	outline: 3px solid orange;
+}
+
+.ticket[title="Taxi"] {
 	color: black;
 	background-color: yellow;
 }
 
-.ticketmenu button[title="Bus"] {
+.ticket[title="Bus"] {
 	color: white;
 	background-color: green;
 }
 
-.ticketmenu button[title="Subway"] {
+.ticket[title="Subway"] {
 	color: white;
 	background-color: red;
 }
 
-.ticketmenu button[title="Black"] {
+.ticket[title="Black"] {
 	color: white;
 	background-color: black;
 }
 
-.ticketmenu button[title="2x"] {
+.ticket[title="2x"] {
 	color: black;
 	background-color: orange;
 }
